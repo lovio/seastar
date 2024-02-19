@@ -1093,15 +1093,6 @@ if (condition)
       $<${condition}:SEASTAR_DEBUG_SHARED_PTR>)
 endif ()
 
-tri_state_option (${Seastar_DEBUG_SHARED_PTR}
-  DEFAULT_BUILD_TYPES "Debug" "Sanitize"
-  CONDITION condition)
-if (condition)
-  target_compile_definitions (seastar
-    PUBLIC
-      $<${condition}:SEASTAR_DEBUG_PROMISE>)
-endif ()
-
 include (CheckLibc)
 
 tri_state_option (${Seastar_STACK_GUARDS}

@@ -64,9 +64,6 @@ void promise_base::move_it(promise_base&& x) noexcept {
     // if &x == this.
     _task = x._task;
     x._task = nullptr;
-#ifdef SEASTAR_DEBUG_PROMISE
-    _task_shard = x._task_shard;
-#endif
     _state = x._state;
     x._state = nullptr;
     _future = x._future;
@@ -114,20 +111,9 @@ void promise_base::set_to_current_exception() noexcept {
     set_exception(std::current_exception());
 }
 
-#ifdef SEASTAR_DEBUG_PROMISE
-
-void promise_base::assert_task_shard() const noexcept {
-    if (_task_shard >= 0 && static_cast<shard_id>(_task_shard) != this_shard_id()) {
-        on_fatal_internal_error(seastar_logger, format("Promise task was set on shard {} but made ready on shard {}", _task_shard, this_shard_id()));
-    }
-}
-
-#endif
-
 template <promise_base::urgent Urgent>
 void promise_base::make_ready() noexcept {
     if (_task) {
-        assert_task_shard();
         if (Urgent == urgent::yes) {
             ::seastar::schedule_urgent(std::exchange(_task, nullptr));
         } else {
@@ -271,13 +257,13 @@ void internal::future_base::do_wait() noexcept {
     assert(thread);
     thread_wake_task wake_task{thread};
     wake_task.make_backtrace();
-    _promise->set_task(&wake_task);
+    _promise->_task = &wake_task;
     thread_impl::switch_out(thread);
 }
 
 void internal::future_base::set_coroutine(task& coroutine) noexcept {
     assert(_promise);
-    _promise->set_task(&coroutine);
+    _promise->_task = &coroutine;
 }
 
 }

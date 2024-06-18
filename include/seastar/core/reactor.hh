@@ -96,7 +96,6 @@ namespace seastar {
 using shard_id = unsigned;
 
 namespace alien {
-class message_queue;
 class instance;
 }
 SEASTAR_MODULE_EXPORT
@@ -631,7 +630,6 @@ private:
 
     future<> run_exit_tasks();
     void stop();
-    friend class alien::message_queue;
     friend class pollable_fd;
     friend class pollable_fd_state;
     friend class posix_file_impl;
@@ -640,7 +638,6 @@ private:
     friend class timer<lowres_clock>;
     friend class timer<manual_clock>;
     friend class smp;
-    friend class smp_message_queue;
     friend class internal::poller;
     friend class scheduling_group;
     friend void internal::add_to_flush_poller(output_stream<char>& os) noexcept;

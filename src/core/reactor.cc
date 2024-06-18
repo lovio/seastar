@@ -2977,6 +2977,13 @@ public:
 
 void
 reactor::wakeup() {
+    if (!_sleeping.load(std::memory_order_relaxed)) {
+        return;
+    }
+
+    // We are free to clear it, because we're sending a signal now
+    _sleeping.store(false, std::memory_order_relaxed);
+
     uint64_t one = 1;
     ::write(_notify_eventfd.get(), &one, sizeof(one));
 }
@@ -3635,11 +3642,7 @@ smp_message_queue::lf_queue::maybe_wakeup() {
     //
     // However, we do need a compiler barrier:
     std::atomic_signal_fence(std::memory_order_seq_cst);
-    if (remote->_sleeping.load(std::memory_order_relaxed)) {
-        // We are free to clear it, because we're sending a signal now
-        remote->_sleeping.store(false, std::memory_order_relaxed);
-        remote->wakeup();
-    }
+    remote->wakeup();
 }
 
 smp_message_queue::lf_queue::~lf_queue() {
